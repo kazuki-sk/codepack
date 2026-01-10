@@ -1,0 +1,91 @@
+# .goreleaser.yaml
+version: 2
+
+project_name: codepack
+
+before:
+  hooks:
+    # ビルド前にgo mod tidyを実行（依存関係の整合性確保）
+    - go mod tidy
+
+builds:
+  - id: codepack-build
+    main: ./cmd/codepack
+    binary: codepack
+    
+    # 1. Target Platforms
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    
+    # Windowsのarm64など、不要な組み合わせを除外
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+    env:
+      - CGO_ENABLED=0
+
+    # 4. Version Injection (ldflags)
+    # -s -w でデバッグ情報を削除しバイナリサイズを削減
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: codepack-archive
+    # 3. Archive Format
+    format: tar.gz
+    
+    # Windowsのみzip形式にする設定
+    format_overrides:
+      - goos: windows
+        format: zip
+    
+    # アーカイブ内のファイル名調整（ディレクトリを含めない設定）
+    wrap_in_directory: false
+    
+    # アーカイブ名のテンプレート (例: codepack_1.0.0_linux_amd64.tar.gz)
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    
+    # LICENSEやREADMEを同梱
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+# 5. Release Note (Changelog)
+changelog:
+  sort: asc
+  filters:
+    # 自動生成から除外するコミットメッセージのパターン
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - 'Merge pull request'
+      - 'Merge branch'
+
+# GitHub Releasesへのアップロード設定
+release:
+  github:
+    owner: kazuki-sk
+    name: codepack
+  # プレリリース版（v0.x.xなど）の場合は自動でprereleaseフラグを立てる
+  prerelease: auto
