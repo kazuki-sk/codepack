@@ -18,7 +18,11 @@ import (
 )
 
 // ldflags で設定されるバージョン情報
-var version = "dev"
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
 func main() {
 	os.Exit(run(os.Args[1:]))
@@ -33,7 +37,8 @@ func run(args []string) int {
 	}
 
 	if cfg.ShowVersion {
-		fmt.Printf("codepack version %s\n", version)
+		// バージョン表示時にビルド情報も含めるとデバッグ時に有用です
+		fmt.Printf("codepack %s (commit: %s, built at: %s)\n", version, commit, date)
 		return 0
 	}
 

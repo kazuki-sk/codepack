@@ -60,7 +60,6 @@ archives:
     
     # LICENSEやREADMEを同梱
     files:
-      - LICENSE
       - README.md
 
 checksum:
